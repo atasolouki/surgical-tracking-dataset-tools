@@ -1,0 +1,33 @@
+ChDataPath  = 'C:\Users\hrosta0\OneDrive - UZ Leuven\MINE\ULA-OP256\AZ_Monica_Ultrasonic\Experiment 1\'; % path to acquisitions
+acquisition = 3; % number of acquisition
+
+folderNames = map_multi_acquisition_files(ChDataPath);
+AllPaths    = fullfile(ChDataPath,folderNames);
+
+slice_idx   = 0;
+data_type   = "IQPost";
+probe_name = 'Dual Linear Flex Olympus 128';
+probe      = Probe(probe_name);
+
+txFocusDepth    = 10e-3;
+nTxEvents       = [98,1];
+opening_angle   = [64,0];
+nLines          = [98,1];
+CompoundingMode = 0;
+DWSlidingTx     = 0;
+
+scanSequence = scanSequencer(txFocusDepth, nTxEvents(1), nTxEvents(2), opening_angle, nLines, CompoundingMode, DWSlidingTx, probe);
+
+ChDataset = ULAOP_UnpackProcessor.PrepareDataset(AllPaths{acquisition},...
+    'slice_idx', slice_idx,...
+    'data_type', data_type,...
+    'probe'    , probe,...
+    'scanSequence', scanSequence);
+
+frame_idx = 1;
+BfDataset = readBeamformedDataULAOP(ChDataset, frame_idx);
+
+BfDataset.meta.Probe = struct(BfDataset.meta.Probe);
+BfDataset.meta.Sequence = struct(BfDataset.meta.Sequence);
+
+save BfDataset BfDataset
